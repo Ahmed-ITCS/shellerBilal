@@ -19,8 +19,6 @@ class Command(BaseCommand):
         for _ in range(10):  # number of suppliers
             supplier = Supplier.objects.create(
                 name=fake.company(),
-                phone=fake.phone_number(),
-                address=fake.address(),
             )
 
             # ---- MunjiPurchase ----
