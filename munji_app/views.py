@@ -1,6 +1,6 @@
 from rest_framework import viewsets
-from .models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings
-from .serializers import SupplierSerializer, MunjiPurchaseSerializer, RiceProductionSerializer, GlobalSettingsSerializer
+from .models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings,Expense
+from .serializers import SupplierSerializer, MunjiPurchaseSerializer, RiceProductionSerializer, GlobalSettingsSerializer,ExpenseSerializer
 
 class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
