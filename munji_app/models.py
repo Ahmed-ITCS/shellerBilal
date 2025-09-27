@@ -33,7 +33,7 @@ class MunjiPurchase(models.Model):
     buying_quantity_munji = models.DecimalField(max_digits=12, decimal_places=2)
     munji_price_per_unit = models.DecimalField(max_digits=12, decimal_places=2)
     total_munji_price = models.DecimalField(max_digits=12, decimal_places=2)  # your existing field
-    total_munji_cost = models.DecimalField(max_digits=12, decimal_places=2, editable=False)  # new field
+    total_munji_cost = models.DecimalField(max_digits=12, decimal_places=2, editable=False,null=True)  # new field
     payment_type = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default=CASH)
 
     created_at = models.DateTimeField(auto_now_add=True)
