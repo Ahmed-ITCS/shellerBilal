@@ -31,14 +31,15 @@ class MunjiPurchase(models.Model):
     category = models.CharField(max_length=255)
     total_bags = models.PositiveIntegerField()
     buying_quantity_munji = models.DecimalField(max_digits=12, decimal_places=2)
-    total_munji_price = models.DecimalField(max_digits=12, decimal_places=2)
     munji_price_per_unit = models.DecimalField(max_digits=12, decimal_places=2)
+    total_munji_price = models.DecimalField(max_digits=12, decimal_places=2)  # your existing field
+    total_munji_cost = models.DecimalField(max_digits=12, decimal_places=2, editable=False)  # new field
     payment_type = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default=CASH)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
-        # total_munji_price = buying_quantity_munji * munji_price_per_unit
+        # Validate total_munji_price
         if self.total_munji_price != self.buying_quantity_munji * self.munji_price_per_unit:
             raise ValidationError("Total Munji Price must equal buying quantity * price per unit.")
 
@@ -49,6 +50,9 @@ class MunjiPurchase(models.Model):
                 raise ValidationError("Insufficient opening balance for this purchase.")
 
     def save(self, *args, **kwargs):
+        # Calculate total_munji_cost automatically
+        self.total_munji_cost = self.buying_quantity_munji * self.munji_price_per_unit
+
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -58,6 +62,15 @@ class MunjiPurchase(models.Model):
         if self.payment_type == self.CASH:
             gs.opening_balance -= self.total_munji_price
         gs.save()
+
+class Expense(models.Model):
+    munji_purchase = models.ForeignKey(MunjiPurchase, on_delete=models.CASCADE, related_name='expenses')
+    title = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} - {self.amount}"
 
 
 # Rice Production

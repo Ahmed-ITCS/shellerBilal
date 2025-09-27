@@ -17,3 +17,6 @@ class RiceProductionViewSet(viewsets.ModelViewSet):
 class GlobalSettingsViewSet(viewsets.ModelViewSet):
     queryset = GlobalSettings.objects.all()
     serializer_class = GlobalSettingsSerializer
+class ExpenseViewSet(viewsets.ModelViewSet):
+    queryset = Expense.objects.all()
+    serializer_class = ExpenseSerializer
