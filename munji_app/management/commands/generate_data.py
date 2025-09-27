@@ -25,8 +25,11 @@ class Command(BaseCommand):
             for _ in range(random.randint(2, 5)):
                 buying_quantity_munji = d2(random.uniform(10, 200))
                 munji_price_per_unit = d2(random.uniform(50, 500))
-                total_munji_price = d2(buying_quantity_munji * munji_price_per_unit)
-                total_munji_cost = d2(buying_quantity_munji * munji_price_per_unit)
+
+                # compute THEN quantize to 2 decimals
+                raw_price = buying_quantity_munji * munji_price_per_unit
+                total_munji_price = d2(raw_price)
+                total_munji_cost = d2(raw_price)
 
                 MunjiPurchase.objects.create(
                     supplier=supplier,
