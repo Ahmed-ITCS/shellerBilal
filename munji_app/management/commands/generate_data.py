@@ -50,7 +50,7 @@ class Command(BaseCommand):
             for _ in range(random.randint(2, 5)):
                 qprod = d2(random.uniform(50, 500))
                 rice_price = d2(random.uniform(50, 200))
-                total_quality = d2(random.uniform(0.7, 0.95) * qprod)
+                total_quality = d2(float(qprod) * random.uniform(0.7, 0.95))
                 total_price = d2(total_quality * rice_price)
 
                 rice_productions.append(RiceProduction(
