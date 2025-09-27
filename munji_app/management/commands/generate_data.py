@@ -3,7 +3,7 @@ import random
 from django.utils import timezone
 from django.core.management.base import BaseCommand
 from faker import Faker
-from munji.models import Supplier, MunjiPurchase, RiceProduction
+from munji_app.models import Supplier, MunjiPurchase, RiceProduction
 
 fake = Faker()
 
