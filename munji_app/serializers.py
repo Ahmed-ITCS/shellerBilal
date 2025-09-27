@@ -9,6 +9,7 @@ class SupplierSerializer(serializers.ModelSerializer):
 
 
 class MunjiPurchaseSerializer(serializers.ModelSerializer):
+    supplier = serializers.StringRelatedField(read_only=True) # Add this line
     class Meta:
         model = MunjiPurchase
         fields = '__all__'
