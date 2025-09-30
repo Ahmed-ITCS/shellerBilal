@@ -30,3 +30,12 @@ def get_payment_choices(request):
         {'value': 'Credit', 'label': 'Credit'},
     ]
     return Response(choices)
+
+@api_view(['GET'])
+def get_category_choices(request):
+    choices = [
+        {'value': 'Paddy', 'label': 'Paddy'},
+        {'value': 'Wheat', 'label': 'Wheat'},
+        {'value': 'Corn', 'label': 'Corn'},
+    ]
+    return Response(choices)
