@@ -3,7 +3,7 @@ import random
 from django.utils import timezone
 from django.core.management.base import BaseCommand
 from faker import Faker
-from munji_app.models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings
+from munji_app.models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings, Category
 
 fake = Faker()
 def d2(x): return Decimal(x).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
@@ -19,6 +19,11 @@ class Command(BaseCommand):
                                                      defaults={'opening_balance': Decimal('999999.99'),
                                                                'total_munji': Decimal('0.00')})
 
+        # Create default categories if they don't exist
+        default_categories = ["Paddy", "Wheat", "Corn", "Rice"]
+        for cat_name in default_categories:
+            Category.objects.get_or_create(name=cat_name)
+
         suppliers = []
         munji_purchases = []
         rice_productions = []
@@ -29,6 +34,9 @@ class Command(BaseCommand):
 
         Supplier.objects.bulk_create(suppliers)
 
+        # Get all categories for random assignment
+        all_categories = list(Category.objects.all())
+
         for s in Supplier.objects.all():
             for _ in range(random.randint(2, 5)):
                 qty   = d2(random.uniform(10, 200))
@@ -37,7 +45,7 @@ class Command(BaseCommand):
 
                 munji_purchases.append(MunjiPurchase(
                     supplier=s,
-                    category=fake.word(),
+                    category=random.choice(all_categories),
                     total_bags=random.randint(10, 100),
                     buying_quantity_munji=qty,
                     munji_price_per_unit=price,
