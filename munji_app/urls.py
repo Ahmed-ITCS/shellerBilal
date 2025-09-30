@@ -8,6 +8,7 @@ router.register(r'purchases', MunjiPurchaseViewSet)
 router.register(r'production', RiceProductionViewSet)
 router.register(r'globals', GlobalSettingsViewSet)
 router.register(r'expenses', ExpenseViewSet)
+router.register(r'categories', CategoryViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
