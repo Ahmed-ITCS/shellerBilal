@@ -21,10 +21,18 @@ class Supplier(models.Model):
         return self.name
 
 
+# Category
+class Category(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 # Munji Purchase
 class MunjiPurchase(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
-    category = models.CharField(max_length=255)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     total_bags = models.PositiveIntegerField()
     buying_quantity_munji = models.DecimalField(max_digits=12, decimal_places=2)
     munji_price_per_unit = models.DecimalField(max_digits=12, decimal_places=2)

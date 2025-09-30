@@ -1,12 +1,16 @@
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings,Expense
-from .serializers import SupplierSerializer, MunjiPurchaseSerializer, RiceProductionSerializer, GlobalSettingsSerializer,ExpenseSerializer
+from .models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings,Expense, Category
+from .serializers import SupplierSerializer, MunjiPurchaseSerializer, RiceProductionSerializer, GlobalSettingsSerializer,ExpenseSerializer, CategorySerializer
 
 class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
     serializer_class = SupplierSerializer
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
 
 class MunjiPurchaseViewSet(viewsets.ModelViewSet):
     queryset = MunjiPurchase.objects.all()
@@ -28,14 +32,5 @@ def get_payment_choices(request):
     choices = [
         {'value': 'Cash', 'label': 'Cash'},
         {'value': 'Credit', 'label': 'Credit'},
-    ]
-    return Response(choices)
-
-@api_view(['GET'])
-def get_category_choices(request):
-    choices = [
-        {'value': 'Paddy', 'label': 'Paddy'},
-        {'value': 'Wheat', 'label': 'Wheat'},
-        {'value': 'Corn', 'label': 'Corn'},
     ]
     return Response(choices)
