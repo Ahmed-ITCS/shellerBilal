@@ -1,7 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 
-# Global settings
 class GlobalSettings(models.Model):
     opening_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     cash_in_hand = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -14,6 +13,45 @@ class GlobalSettings(models.Model):
     class Meta:
         verbose_name_plural = "Global Settings"
 
+    def add_opening_balance(self, amount):
+        if amount < 0:
+            raise ValidationError("Opening balance cannot be negative.")
+        self.opening_balance += amount
+        #self.cash_in_hand -= amount  # Subtract cash_in_hand automatically
+        if self.cash_in_hand < 0:
+            raise ValidationError("Cash in hand cannot go negative after adjusting for opening balance.")
+        self.save()
+
+    def add_cash_in_hand(self, amount):
+        if amount < 0:
+            raise ValidationError("Cash in hand cannot be negative.")
+        self.cash_in_hand += amount
+        self.opening_balance -= amount
+        if self.opening_balance < 0:
+            raise ValidationError("Opening balance cannot go negative after adjusting for cash in hand.")
+        self.save()
+
+    def add_sales(self, amount):
+        if amount < 0:
+            raise ValidationError("Sales amount cannot be negative.")
+        self.sales += amount
+        self.save()
+
+    def deduct_purchase(self, amount):
+        if amount < 0:
+            raise ValidationError("Purchase amount cannot be negative.")
+        if amount > self.cash_in_hand:
+            raise ValidationError("Not enough cash in hand to make this purchase.")
+        self.cash_in_hand -= amount
+        self.save()
+
+    def deduct_miscellaneous(self, amount):
+        if amount < 0:
+            raise ValidationError("Miscellaneous cost cannot be negative.")
+        if amount > self.cash_in_hand:
+            raise ValidationError("Not enough cash in hand to cover this miscellaneous cost.")
+        self.cash_in_hand -= amount
+        self.save()
 
 # Supplier / Buying source
 class Supplier(models.Model):
@@ -56,17 +94,15 @@ class MunjiPurchase(models.Model):
                 raise ValidationError("Insufficient opening balance for this purchase.")
 
     def save(self, *args, **kwargs):
-        # Calculate total_munji_cost automatically
         self.total_munji_cost = self.buying_quantity_munji * self.munji_price_per_unit
-
         self.full_clean()
         super().save(*args, **kwargs)
 
-        # Update global settings
         gs, _ = GlobalSettings.objects.get_or_create(id=1)
         gs.total_munji += self.buying_quantity_munji
-        if self.payment_type == self.CASH:
-            gs.opening_balance -= self.total_munji_price
+
+        if self.payment_type.lower() == 'cash':
+            gs.deduct_purchase(self.total_munji_price)
         gs.save()
 
 class Expense(models.Model):
@@ -120,3 +156,10 @@ class MiscellaneousCost(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.amount}"
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+        gs, _ = GlobalSettings.objects.get_or_create(id=1)
+        gs.deduct_miscellaneous(self.amount)
