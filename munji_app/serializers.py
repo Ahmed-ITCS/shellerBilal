@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings,Expense, Category
+from .models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings,Expense, Category,MiscellaneousCost
 
 
 class SupplierSerializer(serializers.ModelSerializer):
