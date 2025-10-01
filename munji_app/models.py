@@ -4,6 +4,8 @@ from django.core.exceptions import ValidationError
 # Global settings
 class GlobalSettings(models.Model):
     opening_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    cash_in_hand = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    sales = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total_munji = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     def __str__(self):

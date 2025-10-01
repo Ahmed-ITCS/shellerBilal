@@ -5,7 +5,7 @@ from .views import SupplierViewSet, MunjiPurchaseViewSet, RiceProductionViewSet,
 router = DefaultRouter()
 router.register(r'suppliers', SupplierViewSet)
 router.register(r'purchases', MunjiPurchaseViewSet)
-router.register(r'production', RiceProductionViewSet)
+#router.register(r'production', RiceProductionViewSet)
 router.register(r'globals', GlobalSettingsViewSet)
 router.register(r'expenses', ExpenseViewSet)
 router.register(r'categories', CategoryViewSet)
