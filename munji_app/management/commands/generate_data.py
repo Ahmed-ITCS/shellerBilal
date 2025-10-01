@@ -3,7 +3,7 @@ import random
 from django.utils import timezone
 from django.core.management.base import BaseCommand
 from faker import Faker
-from munji_app.models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings, Category
+from munji_app.models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings, Category, MiscellaneousCost
 
 fake = Faker()
 def d2(x): return Decimal(x).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
@@ -27,6 +27,7 @@ class Command(BaseCommand):
         suppliers = []
         munji_purchases = []
         rice_productions = []
+        miscellaneous_costs = []
 
         for _ in range(10):
             s = Supplier(name=fake.company())
@@ -77,5 +78,13 @@ class Command(BaseCommand):
 
         MunjiPurchase.objects.bulk_create(munji_purchases)
         RiceProduction.objects.bulk_create(rice_productions)
+
+        for _ in range(10):
+            miscellaneous_costs.append(MiscellaneousCost(
+                title=fake.sentence(nb_words=4),
+                amount=d2(random.uniform(10, 1000)),
+                created_at=timezone.now()
+            ))
+        MiscellaneousCost.objects.bulk_create(miscellaneous_costs)
 
         self.stdout.write(self.style.SUCCESS("✅ Data generation complete (bulk inserted)."))

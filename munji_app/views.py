@@ -1,8 +1,8 @@
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings,Expense, Category
-from .serializers import SupplierSerializer, MunjiPurchaseSerializer, RiceProductionSerializer, GlobalSettingsSerializer,ExpenseSerializer, CategorySerializer
+from .models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings,Expense, Category, MiscellaneousCost
+from .serializers import SupplierSerializer, MunjiPurchaseSerializer, RiceProductionSerializer, GlobalSettingsSerializer,ExpenseSerializer, CategorySerializer, MiscellaneousCostSerializer
 
 class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
@@ -26,6 +26,10 @@ class GlobalSettingsViewSet(viewsets.ModelViewSet):
 class ExpenseViewSet(viewsets.ModelViewSet):
     queryset = Expense.objects.all()
     serializer_class = ExpenseSerializer
+
+class MiscellaneousCostViewSet(viewsets.ModelViewSet):
+    queryset = MiscellaneousCost.objects.all()
+    serializer_class = MiscellaneousCostSerializer
 
 @api_view(['GET'])
 def get_payment_choices(request):

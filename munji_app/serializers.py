@@ -36,3 +36,9 @@ class ExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = '__all__'
+
+
+class MiscellaneousCostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MiscellaneousCost
+        fields = '__all__'
