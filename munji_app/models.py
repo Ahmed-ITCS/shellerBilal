@@ -79,8 +79,8 @@ class MunjiPurchase(models.Model):
         (CREDIT, "Credit"),
     ]
 
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE,null=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE,null=True,blank=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE,null=True,blank=True)
     total_bags = models.PositiveIntegerField()
     buying_quantity_munji = models.DecimalField(max_digits=12, decimal_places=2)
     munji_price_per_unit = models.DecimalField(max_digits=12, decimal_places=2)
