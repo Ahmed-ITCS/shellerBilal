@@ -125,10 +125,12 @@ USE_TZ = True
 
 
 
+# Add this to your REST_FRAMEWORK settings
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10, 
+    'EXCEPTION_HANDLER': 'munji_app.exception_handler.custom_exception_handler',
 }
 
 # Default primary key field type

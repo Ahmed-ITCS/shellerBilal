@@ -16,41 +16,41 @@ class GlobalSettings(models.Model):
 
     def add_opening_balance(self, amount):
         if amount < 0:
-            raise ValidationError("Opening balance cannot be negative.")
+            raise ValidationError({"amount": "Opening balance cannot be negative."})
         self.opening_balance += amount
         #self.cash_in_hand -= amount  # Subtract cash_in_hand automatically
         if self.cash_in_hand < 0:
-            raise ValidationError("Cash in hand cannot go negative after adjusting for opening balance.")
+            raise ValidationError({"amount": "Cash in hand cannot go negative after adjusting for opening balance."})
         self.save()
 
     def add_cash_in_hand(self, amount):
         if amount < 0:
-            raise ValidationError("Cash in hand cannot be negative.")
+            raise ValidationError({"amount": "Cash in hand cannot be negative."})
         self.cash_in_hand += amount
         self.opening_balance -= amount
         if self.opening_balance < 0:
-            raise ValidationError("Opening balance cannot go negative after adjusting for cash in hand.")
+            raise ValidationError({"amount": "Opening balance cannot go negative after adjusting for cash in hand."})
         self.save()
 
     def add_sales(self, amount):
         if amount < 0:
-            raise ValidationError("Sales amount cannot be negative.")
+            raise ValidationError({"amount": "Sales amount cannot be negative."})
         self.sales += amount
         self.save()
 
     def deduct_purchase(self, amount):
         if amount < 0:
-            raise ValidationError("Purchase amount cannot be negative.")
+            raise ValidationError({"amount": "Purchase amount cannot be negative."})
         if amount > self.cash_in_hand:
-            raise ValidationError("Not enough cash in hand to make this purchase.")
+            raise ValidationError({"amount": "Not enough cash in hand to make this purchase."})
         self.cash_in_hand -= amount
         self.save()
 
     def deduct_miscellaneous(self, amount):
         if amount < 0:
-            raise ValidationError("Miscellaneous cost cannot be negative.")
+            raise ValidationError({"amount": "Miscellaneous cost cannot be negative."})
         if amount > self.cash_in_hand:
-            raise ValidationError("Not enough cash in hand to cover this miscellaneous cost.")
+            raise ValidationError({"amount": "Not enough cash in hand to cover this miscellaneous cost."})
         self.cash_in_hand -= amount
         self.save()
 
@@ -93,13 +93,13 @@ class MunjiPurchase(models.Model):
     def clean(self):
         # Validate total_munji_price
         if self.total_munji_price != self.buying_quantity_munji * self.munji_price_per_unit:
-            raise ValidationError("Total Munji Price must equal buying quantity * price per unit.")
+            raise ValidationError({"total_munji_price": "Total Munji Price must equal buying quantity * price per unit."})
 
         # Check if opening_balance is sufficient for cash purchases
         if self.payment_type == self.CASH:
             gs = GlobalSettings.objects.first()
             if gs and self.total_munji_price > gs.opening_balance:
-                raise ValidationError("Insufficient opening balance for this purchase.")
+                raise ValidationError({"payment_type": "Insufficient opening balance for this purchase."})
 
 
     def save(self, *args, **kwargs):
@@ -107,15 +107,18 @@ class MunjiPurchase(models.Model):
             (self.buying_quantity_munji * self.munji_price_per_unit)
             .quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         )
-        self.full_clean()
-        super().save(*args, **kwargs)
+        try:
+            self.full_clean()
+            super().save(*args, **kwargs)
 
-        gs, _ = GlobalSettings.objects.get_or_create(id=1)
-        gs.total_munji += self.buying_quantity_munji
+            gs, _ = GlobalSettings.objects.get_or_create(id=1)
+            gs.total_munji += self.buying_quantity_munji
 
-        if self.payment_type == self.CASH:
-            gs.deduct_purchase(self.total_munji_price)
-        gs.save()
+            if self.payment_type == self.CASH:
+                gs.deduct_purchase(self.total_munji_price)
+            gs.save()
+        except ValidationError as e:
+            raise ValidationError(e)
 
 
 class Expense(models.Model):
@@ -144,22 +147,27 @@ class RiceProduction(models.Model):
 
     def clean(self):
         gs = GlobalSettings.objects.first()
-        if not gs or self.quantity_produced > gs.total_munji:
-            raise ValidationError("Not enough Munji in global total.")
+        if not gs:
+            raise ValidationError({"__all__": "Global settings not found."})
+        if self.quantity_produced > gs.total_munji:
+            raise ValidationError({"quantity_produced": "Not enough Munji in global total."})
 
         # total_price = total_quality * rice_price_per_unit
         if self.total_price != self.total_quality * self.rice_price_per_unit:
-            raise ValidationError("Total price must equal total quality * rice price per unit.")
+            raise ValidationError({"total_price": "Total price must equal total quality * rice price per unit."})
 
     def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
+        try:
+            self.full_clean()
+            super().save(*args, **kwargs)
 
-        # Deduct used munji from global
-        gs = GlobalSettings.objects.first()
-        if gs:
-            gs.total_munji -= self.quantity_produced
-            gs.save()
+            # Deduct used munji from global
+            gs = GlobalSettings.objects.first()
+            if gs:
+                gs.total_munji -= self.quantity_produced
+                gs.save()
+        except ValidationError as e:
+            raise ValidationError(e)
 
 
 class MiscellaneousCost(models.Model):
@@ -171,8 +179,16 @@ class MiscellaneousCost(models.Model):
         return f"{self.title} - {self.amount}"
 
     def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
+        try:
+            self.full_clean()
+            super().save(*args, **kwargs)
 
-        gs, _ = GlobalSettings.objects.get_or_create(id=1)
-        gs.deduct_miscellaneous(self.amount)
+            gs, _ = GlobalSettings.objects.get_or_create(id=1)
+            try:
+                gs.deduct_miscellaneous(self.amount)
+            except ValidationError as e:
+                # Delete the already saved record if deduction fails
+                self.delete()
+                raise ValidationError({"amount": str(e)})
+        except ValidationError as e:
+            raise ValidationError(e)
