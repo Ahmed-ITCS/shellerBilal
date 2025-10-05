@@ -24,7 +24,7 @@ class GlobalSettingsViewSet(viewsets.ModelViewSet):
     serializer_class = GlobalSettingsSerializer
 
     def get_object(self):
-        # Always return singleton
+        # Singleton pattern
         obj, created = GlobalSettings.objects.get_or_create(id=1)
         return obj
 
@@ -39,13 +39,20 @@ class GlobalSettingsViewSet(viewsets.ModelViewSet):
 
         data = request.data
 
-        # Handle opening_balance (add instead of overwrite)
-        if "opening_balance" in data:
-            gs.opening_balance += Decimal(data["opening_balance"])
+        # Safely parse values (avoid str vs Decimal issues)
+        def to_decimal(val):
+            try:
+                return Decimal(str(val))
+            except:
+                return Decimal(0)
 
-        # Handle cash_in_hand (add to cash, subtract from capital)
+        # Add to capital
+        if "opening_balance" in data:
+            gs.opening_balance += to_decimal(data["opening_balance"])
+
+        # Add to cash (subtract from capital)
         if "cash_in_hand" in data:
-            amount = Decimal(data["cash_in_hand"])
+            amount = to_decimal(data["cash_in_hand"])
             if gs.opening_balance < amount:
                 return Response(
                     {"error": "Not enough capital to move into cash."},
@@ -54,18 +61,17 @@ class GlobalSettingsViewSet(viewsets.ModelViewSet):
             gs.cash_in_hand += amount
             gs.opening_balance -= amount
 
-        # Handle sales (accumulate)
+        # Add to sales
         if "sales" in data:
-            gs.sales += Decimal(data["sales"])
+            gs.sales += to_decimal(data["sales"])
 
-        # Handle total_munji (accumulate)
+        # Add to total munji
         if "total_munji" in data:
-            gs.total_munji += Decimal(data["total_munji"])
+            gs.total_munji += to_decimal(data["total_munji"])
 
         gs.save()
         serializer = self.get_serializer(gs)
         return Response(serializer.data)
-
 
 class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
