@@ -71,14 +71,21 @@ class Category(models.Model):
 
 # Munji Purchase
 class MunjiPurchase(models.Model):
+    CASH = "Cash"
+    CREDIT = "Credit"
+    PAYMENT_CHOICES = [
+        (CASH, "Cash"),
+        (CREDIT, "Credit"),
+    ]
+
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     total_bags = models.PositiveIntegerField()
     buying_quantity_munji = models.DecimalField(max_digits=12, decimal_places=2)
     munji_price_per_unit = models.DecimalField(max_digits=12, decimal_places=2)
-    total_munji_price = models.DecimalField(max_digits=12, decimal_places=2)  # your existing field
-    total_munji_cost = models.DecimalField(max_digits=12, decimal_places=2, editable=False,null=True)  # new field
-    payment_type = models.CharField(max_length=10)
+    total_munji_price = models.DecimalField(max_digits=12, decimal_places=2)
+    total_munji_cost = models.DecimalField(max_digits=12, decimal_places=2, editable=False, null=True)
+    payment_type = models.CharField(max_length=10, choices=PAYMENT_CHOICES)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -88,7 +95,7 @@ class MunjiPurchase(models.Model):
             raise ValidationError("Total Munji Price must equal buying quantity * price per unit.")
 
         # Check if opening_balance is sufficient for cash purchases
-        if self.payment_type == self.CASH:
+        if self.payment_type == self.CASH:   # ✅ now valid
             gs = GlobalSettings.objects.first()
             if gs and self.total_munji_price > gs.opening_balance:
                 raise ValidationError("Insufficient opening balance for this purchase.")
@@ -101,9 +108,10 @@ class MunjiPurchase(models.Model):
         gs, _ = GlobalSettings.objects.get_or_create(id=1)
         gs.total_munji += self.buying_quantity_munji
 
-        if self.payment_type.lower() == 'cash':
+        if self.payment_type == self.CASH:   # ✅ no crash now
             gs.deduct_purchase(self.total_munji_price)
         gs.save()
+
 
 class Expense(models.Model):
     munji_purchase = models.ForeignKey(MunjiPurchase, on_delete=models.CASCADE, related_name='expenses')
