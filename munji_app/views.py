@@ -89,3 +89,9 @@ def get_payment_choices(request):
         {'value': 'Credit', 'label': 'Credit'},
     ]
     return Response(choices)
+
+@api_view(['GET'])
+def recent_purchases(request):
+    purchases = MunjiPurchase.objects.order_by('-created_at')[:10]  # latest 10
+    serializer = MunjiPurchaseSerializer(purchases, many=True)
+    return Response(serializer.data)
