@@ -84,29 +84,28 @@ class MunjiPurchase(models.Model):
     total_bags = models.PositiveIntegerField()
     buying_quantity_munji = models.DecimalField(max_digits=12, decimal_places=2)
     munji_price_per_unit = models.DecimalField(max_digits=12, decimal_places=2)
-    total_munji_price = models.DecimalField(max_digits=12, decimal_places=2)
+    total_munji_price = models.DecimalField(max_digits=12, decimal_places=2, editable=False)
     total_munji_cost = models.DecimalField(max_digits=12, decimal_places=2, editable=False, null=True)
     payment_type = models.CharField(max_length=10, choices=PAYMENT_CHOICES)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
-        # Validate total_munji_price
-        if self.total_munji_price != self.buying_quantity_munji * self.munji_price_per_unit:
-            raise ValidationError({"total_munji_price": "Total Munji Price must equal buying quantity * price per unit."})
-
         # Check if opening_balance is sufficient for cash purchases
         if self.payment_type == self.CASH:
             gs = GlobalSettings.objects.first()
             if gs and self.total_munji_price > gs.opening_balance:
                 raise ValidationError({"payment_type": "Insufficient opening balance for this purchase."})
 
-
     def save(self, *args, **kwargs):
-        self.total_munji_cost = (
+        # Calculate total_munji_price automatically
+        self.total_munji_price = (
             (self.buying_quantity_munji * self.munji_price_per_unit)
             .quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         )
+        
+        self.total_munji_cost = self.total_munji_price
+        
         try:
             self.full_clean()
             super().save(*args, **kwargs)
