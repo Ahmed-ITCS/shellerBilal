@@ -8,51 +8,15 @@ class GlobalSettings(models.Model):
     sales = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total_munji = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
-    def __str__(self):
-        return "Global Settings"
+    def save(self, *args, **kwargs):
+        if not self.pk and GlobalSettings.objects.exists():
+            raise ValidationError("Only one GlobalSettings instance allowed.")
+        return super().save(*args, **kwargs)
 
-    class Meta:
-        verbose_name_plural = "Global Settings"
-
-    def add_opening_balance(self, amount):
-        if amount < 0:
-            raise ValidationError({"amount": "Opening balance cannot be negative."})
-        self.opening_balance += amount
-        #self.cash_in_hand -= amount  # Subtract cash_in_hand automatically
-        if self.cash_in_hand < 0:
-            raise ValidationError({"amount": "Cash in hand cannot go negative after adjusting for opening balance."})
-        self.save()
-
-    def add_cash_in_hand(self, amount):
-        if amount < 0:
-            raise ValidationError({"amount": "Cash in hand cannot be negative."})
-        self.cash_in_hand += amount
-        self.opening_balance -= amount
-        if self.opening_balance < 0:
-            raise ValidationError({"amount": "Opening balance cannot go negative after adjusting for cash in hand."})
-        self.save()
-
-    def add_sales(self, amount):
-        if amount < 0:
-            raise ValidationError({"amount": "Sales amount cannot be negative."})
-        self.sales += amount
-        self.save()
-
-    def deduct_purchase(self, amount):
-        if amount < 0:
-            raise ValidationError({"amount": "Purchase amount cannot be negative."})
-        if amount > self.cash_in_hand:
-            raise ValidationError({"amount": "Not enough cash in hand to make this purchase."})
-        self.cash_in_hand -= amount
-        self.save()
-
-    def deduct_miscellaneous(self, amount):
-        if amount < 0:
-            raise ValidationError({"amount": "Miscellaneous cost cannot be negative."})
-        if amount > self.cash_in_hand:
-            raise ValidationError({"amount": "Not enough cash in hand to cover this miscellaneous cost."})
-        self.cash_in_hand -= amount
-        self.save()
+    @classmethod
+    def get_instance(cls):
+        obj, _ = cls.objects.get_or_create(id=1)
+        return obj
 
 # Supplier / Buying source
 class Supplier(models.Model):
