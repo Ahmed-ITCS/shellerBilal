@@ -121,9 +121,6 @@ class RiceProductionViewSet(viewsets.ModelViewSet):
                 return Response({'error': e.message_dict}, status=status.HTTP_400_BAD_REQUEST)
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-class GlobalSettingsViewSet(viewsets.ModelViewSet):
-    queryset = GlobalSettings.objects.all()
-    serializer_class = GlobalSettingsSerializer
 
 class ExpenseViewSet(viewsets.ModelViewSet):
     queryset = Expense.objects.all()
