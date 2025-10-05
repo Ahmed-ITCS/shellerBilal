@@ -82,9 +82,9 @@ class MunjiPurchase(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     total_bags = models.TextField()
     buying_quantity_munji = models.TextField(max_digits=12, decimal_places=2)
-    munji_price_per_unit = models.TextField(max_digits=12, decimal_places=2)
-    total_munji_price = models.TextField(max_digits=12, decimal_places=2)
-    total_munji_cost = models.TextField(max_digits=12, decimal_places=2, editable=False, null=True)
+    munji_price_per_unit = models.DecimalField(max_digits=12, decimal_places=2)
+    total_munji_price = models.DecimalField(max_digits=12, decimal_places=2)
+    total_munji_cost = models.DecimalField(max_digits=12, decimal_places=2, editable=False, null=True)
     payment_type = models.CharField(max_length=10, choices=PAYMENT_CHOICES)
 
     created_at = models.DateTimeField(auto_now_add=True)
