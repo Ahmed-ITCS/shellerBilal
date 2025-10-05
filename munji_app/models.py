@@ -100,8 +100,12 @@ class MunjiPurchase(models.Model):
             if gs and self.total_munji_price > gs.opening_balance:
                 raise ValidationError("Insufficient opening balance for this purchase.")
 
+
     def save(self, *args, **kwargs):
-        self.total_munji_cost = self.buying_quantity_munji * self.munji_price_per_unit
+        self.total_munji_cost = (
+            (self.buying_quantity_munji * self.munji_price_per_unit)
+            .quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        )
         self.full_clean()
         super().save(*args, **kwargs)
 
