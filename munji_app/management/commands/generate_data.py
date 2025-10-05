@@ -3,7 +3,7 @@ import random
 from django.utils import timezone
 from django.core.management.base import BaseCommand
 from faker import Faker
-from munji_app.models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings, Category, MiscellaneousCost
+from munji_app.models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings, Category, MiscellaneousCost, Expense
 
 fake = Faker()
 def d2(x): return Decimal(x).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
@@ -28,6 +28,7 @@ class Command(BaseCommand):
         munji_purchases = []
         rice_productions = []
         miscellaneous_costs = []
+        expenses = []
 
         for _ in range(10):
             s = Supplier(name=fake.company())
@@ -78,6 +79,20 @@ class Command(BaseCommand):
 
         MunjiPurchase.objects.bulk_create(munji_purchases)
         RiceProduction.objects.bulk_create(rice_productions)
+
+        # Generate expenses for each munji purchase
+        expense_types = ["Transportation", "Labor", "Storage", "Handling", "Inspection", "Documentation", "Taxes", "Miscellaneous"]
+        for purchase in MunjiPurchase.objects.all():
+            # Add 1-3 expenses per purchase
+            for _ in range(random.randint(1, 3)):
+                expenses.append(Expense(
+                    munji_purchase=purchase,
+                    title=random.choice(expense_types),
+                    amount=d2(random.uniform(50, 500)),
+                    created_at=timezone.now()
+                ))
+        
+        Expense.objects.bulk_create(expenses)
 
         for _ in range(10):
             miscellaneous_costs.append(MiscellaneousCost(
