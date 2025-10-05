@@ -15,11 +15,42 @@ class GlobalSettings(models.Model):
 
     @classmethod
     def get_instance(cls):
-        obj, _ = cls.objects.get_or_create(id=1)  # always return the same one
+        obj, _ = cls.objects.get_or_create(id=1)
         return obj
 
     def __str__(self):
         return "Global Settings"
+
+    # --- ACCOUNTING RULES ---
+    def add_capital(self, amount):
+        """When capital is added, it increases opening balance."""
+        self.opening_balance += amount
+        self.save()
+
+    def add_cash(self, amount):
+        """
+        When cash is injected:
+        - Increase cash_in_hand
+        - Decrease capital (opening_balance)
+        """
+        if self.opening_balance < amount:
+            raise ValidationError("Not enough capital to convert to cash.")
+        self.cash_in_hand += amount
+        self.opening_balance -= amount
+        self.save()
+
+    def deduct_purchase(self, amount, munji_qty):
+        """
+        When a purchase is made:
+        - Decrease cash_in_hand (if Cash payment)
+        - Increase total_munji
+        """
+        if self.cash_in_hand < amount:
+            raise ValidationError("Not enough cash in hand for this purchase.")
+
+        self.cash_in_hand -= amount
+        self.total_munji += munji_qty
+        self.save()
 
 # Supplier / Buying source
 class Supplier(models.Model):
@@ -65,26 +96,28 @@ class MunjiPurchase(models.Model):
                 raise ValidationError({"payment_type": "Insufficient opening balance for this purchase."})
 
     def save(self, *args, **kwargs):
-        # Calculate total_munji_price automatically
         self.total_munji_price = (
             (self.buying_quantity_munji * self.munji_price_per_unit)
             .quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         )
-        
         self.total_munji_cost = self.total_munji_price
-        
+
         try:
             self.full_clean()
             super().save(*args, **kwargs)
 
-            gs, _ = GlobalSettings.objects.get_or_create(id=1)
-            gs.total_munji += self.buying_quantity_munji
+            gs = GlobalSettings.get_instance()
 
             if self.payment_type == self.CASH:
-                gs.deduct_purchase(self.total_munji_price)
-            gs.save()
+                gs.deduct_purchase(self.total_munji_price, self.buying_quantity_munji)
+            else:
+                # Credit purchase → still increase munji, but no cash deduction
+                gs.total_munji += self.buying_quantity_munji
+                gs.save()
+
         except ValidationError as e:
             raise ValidationError(e)
+        
 
 
 class Expense(models.Model):

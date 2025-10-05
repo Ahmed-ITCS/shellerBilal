@@ -19,7 +19,33 @@ def global_settings(request):
 
     serializer = GlobalSettingsSerializer(gs)
     return Response(serializer.data)
+class GlobalSettingsViewSet(viewsets.ModelViewSet):
+    serializer_class = GlobalSettingsSerializer
+    queryset = GlobalSettings.objects.all()
 
+    def get_object(self):
+        # Always return the singleton instance (id=1 or first record)
+        obj, created = GlobalSettings.objects.get_or_create(id=1)
+        return obj
+
+    def list(self, request, *args, **kwargs):
+        obj = self.get_object()
+        serializer = self.get_serializer(obj)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        # Block creation of new rows
+        return Response(
+            {"detail": "Creation not allowed. Use PUT/PATCH to update existing settings."},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        # Block delete too
+        return Response(
+            {"detail": "Deletion not allowed for global settings."},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+        )
 class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
     serializer_class = ChoiceSerializer
