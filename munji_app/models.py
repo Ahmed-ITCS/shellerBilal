@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from decimal import Decimal, ROUND_HALF_UP
 
 class GlobalSettings(models.Model):
     opening_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
