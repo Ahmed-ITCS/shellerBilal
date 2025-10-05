@@ -10,13 +10,16 @@ class GlobalSettings(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pk and GlobalSettings.objects.exists():
-            raise ValidationError("Only one GlobalSettings instance allowed.")
+            raise ValidationError("Only one GlobalSettings instance is allowed.")
         return super().save(*args, **kwargs)
 
     @classmethod
     def get_instance(cls):
-        obj, _ = cls.objects.get_or_create(id=1)
+        obj, _ = cls.objects.get_or_create(id=1)  # always return the same one
         return obj
+
+    def __str__(self):
+        return "Global Settings"
 
 # Supplier / Buying source
 class Supplier(models.Model):

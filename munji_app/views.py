@@ -6,6 +6,20 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from .models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings, Expense, Category, MiscellaneousCost
 from .serializers import SupplierSerializer, MunjiPurchaseSerializer, RiceProductionSerializer, GlobalSettingsSerializer, ExpenseSerializer, CategorySerializer, MiscellaneousCostSerializer,ChoiceSerializer
 
+@api_view(['GET', 'POST'])
+def global_settings(request):
+    gs = GlobalSettings.get_instance()
+
+    if request.method == 'POST':
+        serializer = GlobalSettingsSerializer(gs, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    serializer = GlobalSettingsSerializer(gs)
+    return Response(serializer.data)
+
 class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
     serializer_class = ChoiceSerializer
