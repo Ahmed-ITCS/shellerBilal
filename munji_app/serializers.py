@@ -2,6 +2,16 @@ from rest_framework import serializers
 from .models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings,Expense, Category,MiscellaneousCost
 
 
+
+class ChoiceSerializer(serializers.ModelSerializer):
+    value = serializers.IntegerField(source='id')
+    label = serializers.CharField(source='name')
+
+    class Meta:
+        model = Supplier  # or Category
+        fields = ['value', 'label']
+
+
 class SupplierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier

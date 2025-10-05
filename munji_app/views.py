@@ -2,15 +2,16 @@ from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings,Expense, Category, MiscellaneousCost
-from .serializers import SupplierSerializer, MunjiPurchaseSerializer, RiceProductionSerializer, GlobalSettingsSerializer,ExpenseSerializer, CategorySerializer, MiscellaneousCostSerializer
+from .serializers import SupplierSerializer, MunjiPurchaseSerializer, RiceProductionSerializer, GlobalSettingsSerializer,ExpenseSerializer, CategorySerializer, MiscellaneousCostSerializer,ChoiceSerializer
 
 class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
-    serializer_class = SupplierSerializer
+    serializer_class = ChoiceSerializer
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
-    serializer_class = CategorySerializer
+    serializer_class = ChoiceSerializer
+
 
 class MunjiPurchaseViewSet(viewsets.ModelViewSet):
     queryset = MunjiPurchase.objects.all()
