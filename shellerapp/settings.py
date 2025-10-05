@@ -32,7 +32,8 @@ SECRET_KEY = 'django-insecure-yz(co7z2l@v!!ub2thdg&4%t#j=r$3wo($m#%pisrf$y1xe%$5
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['gohesi.pythonanywhere.com']
+ALLOWED_HOSTS = ["*"]
+
 
 
 # Application definition
