@@ -20,32 +20,53 @@ def global_settings(request):
     serializer = GlobalSettingsSerializer(gs)
     return Response(serializer.data)
 class GlobalSettingsViewSet(viewsets.ModelViewSet):
-    serializer_class = GlobalSettingsSerializer
     queryset = GlobalSettings.objects.all()
+    serializer_class = GlobalSettingsSerializer
 
     def get_object(self):
-        # Always return the singleton instance (id=1 or first record)
+        # Always return singleton
         obj, created = GlobalSettings.objects.get_or_create(id=1)
         return obj
 
-    def list(self, request, *args, **kwargs):
-        obj = self.get_object()
-        serializer = self.get_serializer(obj)
+    def update(self, request, *args, **kwargs):
+        return self._custom_update(request)
+
+    def partial_update(self, request, *args, **kwargs):
+        return self._custom_update(request)
+
+    def _custom_update(self, request):
+        gs = self.get_object()
+
+        data = request.data
+
+        # Handle opening_balance (add instead of overwrite)
+        if "opening_balance" in data:
+            gs.opening_balance += Decimal(data["opening_balance"])
+
+        # Handle cash_in_hand (add to cash, subtract from capital)
+        if "cash_in_hand" in data:
+            amount = Decimal(data["cash_in_hand"])
+            if gs.opening_balance < amount:
+                return Response(
+                    {"error": "Not enough capital to move into cash."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            gs.cash_in_hand += amount
+            gs.opening_balance -= amount
+
+        # Handle sales (accumulate)
+        if "sales" in data:
+            gs.sales += Decimal(data["sales"])
+
+        # Handle total_munji (accumulate)
+        if "total_munji" in data:
+            gs.total_munji += Decimal(data["total_munji"])
+
+        gs.save()
+        serializer = self.get_serializer(gs)
         return Response(serializer.data)
 
-    def create(self, request, *args, **kwargs):
-        # Block creation of new rows
-        return Response(
-            {"detail": "Creation not allowed. Use PUT/PATCH to update existing settings."},
-            status=status.HTTP_405_METHOD_NOT_ALLOWED,
-        )
 
-    def destroy(self, request, *args, **kwargs):
-        # Block delete too
-        return Response(
-            {"detail": "Deletion not allowed for global settings."},
-            status=status.HTTP_405_METHOD_NOT_ALLOWED,
-        )
 class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
     serializer_class = ChoiceSerializer

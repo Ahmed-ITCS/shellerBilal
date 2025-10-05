@@ -52,6 +52,20 @@ class GlobalSettings(models.Model):
         self.total_munji += munji_qty
         self.save()
 
+    def deduct_expense(self, amount):
+        """Deduct expense from cash in hand."""
+        if self.cash_in_hand < amount:
+            raise ValidationError("Not enough cash in hand to record expense.")
+        self.cash_in_hand -= amount
+        self.save()
+
+    def deduct_miscellaneous(self, amount):
+        """Deduct miscellaneous cost from cash in hand."""
+        if self.cash_in_hand < amount:
+            raise ValidationError("Not enough cash in hand to cover miscellaneous cost.")
+        self.cash_in_hand -= amount
+        self.save()
+
 # Supplier / Buying source
 class Supplier(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -128,7 +142,15 @@ class Expense(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.amount}"
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
 
+        gs = GlobalSettings.get_instance()
+        try:
+            gs.deduct_expense(self.amount)
+        except ValidationError as e:
+            self.delete()  # rollback if invalid
+            raise e
 
 # Rice Production
 class RiceProduction(models.Model):
@@ -178,16 +200,11 @@ class MiscellaneousCost(models.Model):
         return f"{self.title} - {self.amount}"
 
     def save(self, *args, **kwargs):
-        try:
-            self.full_clean()
-            super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
-            gs, _ = GlobalSettings.objects.get_or_create(id=1)
-            try:
-                gs.deduct_miscellaneous(self.amount)
-            except ValidationError as e:
-                # Delete the already saved record if deduction fails
-                self.delete()
-                raise ValidationError({"amount": str(e)})
+        gs = GlobalSettings.get_instance()
+        try:
+            gs.deduct_miscellaneous(self.amount)
         except ValidationError as e:
-            raise ValidationError(e)
+            self.delete()  # rollback if invalid
+            raise e
