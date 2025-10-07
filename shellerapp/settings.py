@@ -46,7 +46,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'munji_app'
+    'munji_app',
+    'drf_yasg',
+
     
 ]
 

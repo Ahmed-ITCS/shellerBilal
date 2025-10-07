@@ -1,22 +1,28 @@
 from django.contrib import admin
 from django.urls import path, include
-from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView,SpectacularSwaggerView
-from rest_framework.schemas import get_schema_view
-
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
 
 schema_view = get_schema_view(
-    title="Munji Management API",
-    description="API for managing Munji purchases, production, expenses, and global settings",
-    version="1.0.0"
+   openapi.Info(
+      title="Munji App API",
+      default_version='v1',
+      description="API documentation for Munji App",
+      terms_of_service="https://www.yourapp.com/terms/",
+      contact=openapi.Contact(email="contact@yourapp.com"),
+      license=openapi.License(name="Your License"),
+   ),
+   public=True,
+   permission_classes=(permissions.AllowAny,),
 )
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('munji_app.urls')),
-
-    # OpenAPI schema
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),  # always up-to-date
-
-    # ReDoc UI (works in Django 5.x without templates)
-    path('redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
-    path('swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    
+    # OpenAPI schema endpoints
+    path('openapi.json', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
