@@ -87,6 +87,13 @@ class MunjiPurchaseViewSet(viewsets.ModelViewSet):
     queryset = MunjiPurchase.objects.all()
     serializer_class = MunjiPurchaseSerializer
     
+    @action(detail=True, methods=['get'])
+    def expenses(self, request, pk=None):
+        purchase = self.get_object()
+        expenses = purchase.expenses.all()
+        serializer = ExpenseSerializer(expenses, many=True)
+        return Response(serializer.data)
+        
     def create(self, request, *args, **kwargs):
         try:
             return super().create(request, *args, **kwargs)
