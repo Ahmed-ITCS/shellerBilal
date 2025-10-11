@@ -15,6 +15,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('payment-choices/', get_payment_choices, name='payment-choices'),
     path('recent_purchases/', recent_purchases, name='recent_purchases'),
-    path('purchases/<int:pk>/expenses/', MunjiPurchaseViewSet.as_view({'get': 'expenses'}), name='purchase-expenses'),
     #path('global/', global_settings, name='global-settings'),
 ]
