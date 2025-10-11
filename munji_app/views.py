@@ -7,6 +7,8 @@ from .models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings, Exp
 from .serializers import SupplierSerializer, MunjiPurchaseSerializer, RiceProductionSerializer, GlobalSettingsSerializer, ExpenseSerializer, CategorySerializer, MiscellaneousCostSerializer,ChoiceSerializer
 from decimal import Decimal
 from django.db.models import Sum
+from rest_framework.decorators import action
+
 
 
 @api_view(['GET', 'POST'])
