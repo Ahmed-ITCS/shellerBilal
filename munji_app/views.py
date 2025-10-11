@@ -94,6 +94,14 @@ class MunjiPurchaseViewSet(viewsets.ModelViewSet):
     def expenses(self, request, pk=None):
         purchase = self.get_object()
         expenses = purchase.expenses.all()
+
+        # Apply pagination
+        page = self.paginate_queryset(expenses)
+        if page is not None:
+            serializer = ExpenseSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # If pagination is not active
         serializer = ExpenseSerializer(expenses, many=True)
         return Response(serializer.data)
     def create(self, request, *args, **kwargs):
