@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from .models import Supplier, MunjiPurchase, RiceProduction, GlobalSettings, Expense, Category, MiscellaneousCost
 from .serializers import SupplierSerializer, MunjiPurchaseSerializer, RiceProductionSerializer, GlobalSettingsSerializer, ExpenseSerializer, CategorySerializer, MiscellaneousCostSerializer,ChoiceSerializer
 from decimal import Decimal
+from django.db.models import Sum
 
 
 @api_view(['GET', 'POST'])
@@ -93,7 +94,6 @@ class MunjiPurchaseViewSet(viewsets.ModelViewSet):
         expenses = purchase.expenses.all()
         serializer = ExpenseSerializer(expenses, many=True)
         return Response(serializer.data)
-        
     def create(self, request, *args, **kwargs):
         try:
             return super().create(request, *args, **kwargs)
