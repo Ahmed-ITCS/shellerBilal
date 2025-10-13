@@ -91,23 +91,21 @@ class MunjiPurchase(models.Model):
         (CREDIT, "Credit"),
     ]
 
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE,null=True,blank=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE,null=True,blank=True)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
     total_bags = models.PositiveIntegerField()
     buying_quantity_munji = models.DecimalField(max_digits=12, decimal_places=2)
     munji_price_per_unit = models.DecimalField(max_digits=12, decimal_places=2)
     total_munji_price = models.DecimalField(max_digits=12, decimal_places=2, editable=False)
     total_munji_cost = models.DecimalField(max_digits=12, decimal_places=2, editable=False, null=True)
     payment_type = models.CharField(max_length=10, choices=PAYMENT_CHOICES)
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
-        # Check if opening_balance is sufficient for cash purchases
         if self.payment_type == self.CASH:
             gs = GlobalSettings.objects.first()
-            if gs and self.total_munji_price > gs.opening_balance:
-                raise ValidationError({"payment_type": "Insufficient opening balance for this purchase."})
+            if gs and self.total_munji_price > gs.cash_in_hand:
+                raise ValidationError({"payment_type": "Insufficient cash in hand for this purchase."})
 
     def save(self, *args, **kwargs):
         self.total_munji_price = (
@@ -125,13 +123,12 @@ class MunjiPurchase(models.Model):
             if self.payment_type == self.CASH:
                 gs.deduct_purchase(self.total_munji_price, self.buying_quantity_munji)
             else:
-                # Credit purchase → still increase munji, but no cash deduction
                 gs.total_munji += self.buying_quantity_munji
                 gs.save()
 
         except ValidationError as e:
             raise ValidationError(e)
-        
+      
 
 
 class Expense(models.Model):
