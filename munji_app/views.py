@@ -90,6 +90,28 @@ class MunjiPurchaseViewSet(viewsets.ModelViewSet):
     queryset = MunjiPurchase.objects.all()
     serializer_class = MunjiPurchaseSerializer
     
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
+        payment_type = self.request.query_params.get('payment_type')
+        category = self.request.query_params.get('category')
+
+        if start_date:
+            start_date = datetime.strptime(start_date, "%Y-%m-%d")
+            queryset = queryset.filter(created_at__gte=start_date)
+
+        if end_date:
+            end_date = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
+            queryset = queryset.filter(created_at__lt=end_date)
+
+        if payment_type:
+            queryset = queryset.filter(payment_type__iexact=payment_type)
+
+        if category:
+            queryset = queryset.filter(category__iexact=category)
+
+        return queryset
     @action(detail=True, methods=['get'])
     def expenses(self, request, pk=None):
         purchase = self.get_object()
