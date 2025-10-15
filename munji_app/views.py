@@ -81,15 +81,15 @@ class GlobalSettingsViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 class SupplierViewSet(viewsets.ModelViewSet):
-    queryset = Supplier.objects.all()
+    queryset = Supplier.objects.all().order_by('-id')
     serializer_class = ChoiceSerializer
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
+    queryset = Category.objects.all().order_by('-id')
     serializer_class = ChoiceSerializer
 
 class MunjiPurchaseViewSet(viewsets.ModelViewSet):
-    queryset = MunjiPurchase.objects.all()
+    queryset = MunjiPurchase.objects.all().order_by('-created_at')
     serializer_class = MunjiPurchaseSerializer
     
     def get_queryset(self):
