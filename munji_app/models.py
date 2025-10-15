@@ -11,7 +11,7 @@ class GlobalSettings(models.Model):
     cash_in_hand = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     sales = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total_munji = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    created_at = models.DateTimeField(auto_now_add=True)  # ✅ Added
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         if not self.pk and GlobalSettings.objects.exists():
@@ -63,7 +63,7 @@ class GlobalSettings(models.Model):
 # -----------------------------------------
 class Supplier(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)  # ✅ Added
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
@@ -71,7 +71,7 @@ class Supplier(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)  # ✅ Added
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
@@ -140,7 +140,7 @@ class Expense(models.Model):
         try:
             gs.deduct_expense(self.amount)
         except ValidationError as e:
-            self.delete()  # rollback if invalid
+            self.delete()
             raise e
 
 
