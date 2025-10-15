@@ -2,11 +2,16 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from decimal import Decimal, ROUND_HALF_UP
 
+
+# -----------------------------------------
+# Global Settings (Singleton)
+# -----------------------------------------
 class GlobalSettings(models.Model):
     opening_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     cash_in_hand = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     sales = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total_munji = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)  # ✅ Added
 
     def save(self, *args, **kwargs):
         if not self.pk and GlobalSettings.objects.exists():
@@ -23,16 +28,10 @@ class GlobalSettings(models.Model):
 
     # --- ACCOUNTING RULES ---
     def add_capital(self, amount):
-        """When capital is added, it increases opening balance."""
         self.opening_balance += amount
         self.save()
 
     def add_cash(self, amount):
-        """
-        When cash is injected:
-        - Increase cash_in_hand
-        - Decrease capital (opening_balance)
-        """
         if self.opening_balance < amount:
             raise ValidationError("Not enough capital to convert to cash.")
         self.cash_in_hand += amount
@@ -40,56 +39,51 @@ class GlobalSettings(models.Model):
         self.save()
 
     def deduct_purchase(self, amount, munji_qty):
-        """
-        When a purchase is made:
-        - Decrease cash_in_hand (if Cash payment)
-        - Increase total_munji
-        """
         if self.cash_in_hand < amount:
             raise ValidationError("Not enough cash in hand for this purchase.")
-
         self.cash_in_hand -= amount
         self.total_munji += munji_qty
         self.save()
 
     def deduct_expense(self, amount):
-        """Deduct expense from cash in hand."""
         if self.cash_in_hand < amount:
             raise ValidationError("Not enough cash in hand to record expense.")
         self.cash_in_hand -= amount
         self.save()
 
     def deduct_miscellaneous(self, amount):
-        """Deduct miscellaneous cost from cash in hand."""
         if self.cash_in_hand < amount:
             raise ValidationError("Not enough cash in hand to cover miscellaneous cost.")
         self.cash_in_hand -= amount
         self.save()
 
-# Supplier / Buying source
+
+# -----------------------------------------
+# Supplier / Category
+# -----------------------------------------
 class Supplier(models.Model):
     name = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)  # ✅ Added
 
     def __str__(self):
         return self.name
 
 
-# Category
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)  # ✅ Added
 
     def __str__(self):
         return self.name
 
 
+# -----------------------------------------
 # Munji Purchase
+# -----------------------------------------
 class MunjiPurchase(models.Model):
     CASH = "Cash"
     CREDIT = "Credit"
-    PAYMENT_CHOICES = [
-        (CASH, "Cash"),
-        (CREDIT, "Credit"),
-    ]
+    PAYMENT_CHOICES = [(CASH, "Cash"), (CREDIT, "Credit")]
 
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
@@ -117,7 +111,6 @@ class MunjiPurchase(models.Model):
         try:
             self.full_clean()
             super().save(*args, **kwargs)
-
             gs = GlobalSettings.get_instance()
 
             if self.payment_type == self.CASH:
@@ -125,12 +118,13 @@ class MunjiPurchase(models.Model):
             else:
                 gs.total_munji += self.buying_quantity_munji
                 gs.save()
-
         except ValidationError as e:
             raise ValidationError(e)
-      
 
 
+# -----------------------------------------
+# Expense
+# -----------------------------------------
 class Expense(models.Model):
     munji_purchase = models.ForeignKey(MunjiPurchase, on_delete=models.CASCADE, related_name='expenses')
     title = models.CharField(max_length=255)
@@ -139,9 +133,9 @@ class Expense(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.amount}"
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-
         gs = GlobalSettings.get_instance()
         try:
             gs.deduct_expense(self.amount)
@@ -149,7 +143,10 @@ class Expense(models.Model):
             self.delete()  # rollback if invalid
             raise e
 
+
+# -----------------------------------------
 # Rice Production
+# -----------------------------------------
 class RiceProduction(models.Model):
     quantity_produced = models.DecimalField(max_digits=12, decimal_places=2)
     dryer_cost = models.DecimalField(max_digits=12, decimal_places=2)
@@ -169,8 +166,6 @@ class RiceProduction(models.Model):
             raise ValidationError({"__all__": "Global settings not found."})
         if self.quantity_produced > gs.total_munji:
             raise ValidationError({"quantity_produced": "Not enough Munji in global total."})
-
-        # total_price = total_quality * rice_price_per_unit
         if self.total_price != self.total_quality * self.rice_price_per_unit:
             raise ValidationError({"total_price": "Total price must equal total quality * rice price per unit."})
 
@@ -178,8 +173,6 @@ class RiceProduction(models.Model):
         try:
             self.full_clean()
             super().save(*args, **kwargs)
-
-            # Deduct used munji from global
             gs = GlobalSettings.objects.first()
             if gs:
                 gs.total_munji -= self.quantity_produced
@@ -188,6 +181,9 @@ class RiceProduction(models.Model):
             raise ValidationError(e)
 
 
+# -----------------------------------------
+# Miscellaneous Costs
+# -----------------------------------------
 class MiscellaneousCost(models.Model):
     title = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -198,10 +194,9 @@ class MiscellaneousCost(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-
         gs = GlobalSettings.get_instance()
         try:
             gs.deduct_miscellaneous(self.amount)
         except ValidationError as e:
-            self.delete()  # rollback if invalid
+            self.delete()
             raise e
