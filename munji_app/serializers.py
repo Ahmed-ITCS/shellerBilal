@@ -24,13 +24,14 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
 class MunjiPurchaseSerializer(serializers.ModelSerializer):
-    supplier = serializers.StringRelatedField(read_only=True) # Add this line
-    category = serializers.StringRelatedField(read_only=True)
+    supplier_name = serializers.CharField(source='supplier.name', read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
+
     class Meta:
         model = MunjiPurchase
         fields = '__all__'
-
 
 class RiceProductionSerializer(serializers.ModelSerializer):
     class Meta:
