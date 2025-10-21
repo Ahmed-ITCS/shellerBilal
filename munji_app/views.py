@@ -86,14 +86,28 @@ class GlobalSettingsViewSet(viewsets.ModelViewSet):
 # -------------------------------
 # Core Data ViewSets
 # -------------------------------
+#class SupplierViewSet(viewsets.ModelViewSet):
+#    queryset = Supplier.objects.all().order_by('-created_at')
+#    serializer_class = ChoiceSerializer
 class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all().order_by('-created_at')
-    serializer_class = ChoiceSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ChoiceSerializer   # For GET (dropdowns, readable)
+        return SupplierSerializer     # For POST/PUT/PATCH/DELETE
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all().order_by('-created_at')
-    serializer_class = ChoiceSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ChoiceSerializer   # For GET
+        return CategorySerializer     # For POST/PUT/PATCH/DELETE
+#class CategoryViewSet(viewsets.ModelViewSet):
+#    queryset = Category.objects.all().order_by('-created_at')
+#    serializer_class = ChoiceSerializer
 
 
 class MunjiPurchaseViewSet(viewsets.ModelViewSet):
