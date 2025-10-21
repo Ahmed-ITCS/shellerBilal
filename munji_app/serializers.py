@@ -26,8 +26,8 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class MunjiPurchaseSerializer(serializers.ModelSerializer):
-    supplier_name = serializers.CharField(source='supplier.name', read_only=True)
-    category_name = serializers.CharField(source='category.name', read_only=True)
+    supplier = serializers.CharField(source='supplier.name', read_only=True)
+    category = serializers.CharField(source='category.name', read_only=True)
 
     class Meta:
         model = MunjiPurchase
