@@ -121,7 +121,16 @@ class MunjiPurchase(models.Model):
         except ValidationError as e:
             raise ValidationError(e)
 
-
+    def __str__(self):
+        return (
+            f"Supplier: {self.supplier} | "
+            f"Bags: {self.total_bags} | "
+            f"Qty: {self.buying_quantity_munji} | "
+            f"Unit Price: {self.munji_price_per_unit} | "
+            f"Total: {self.total_munji_price} | "
+            f"Payment: {self.payment_type} | "
+            f"Date: {self.created_at.strftime('%Y-%m-%d')}"
+        )
 # -----------------------------------------
 # Expense
 # -----------------------------------------
