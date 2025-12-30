@@ -199,6 +199,11 @@ class MiscellaneousCostViewSet(viewsets.ModelViewSet):
         except DjangoValidationError as e:
             return Response({'error': getattr(e, 'message_dict', str(e))}, status=400)
 
+    @action(detail=False, methods=['get'])
+    def types(self, request):
+        types = MiscellaneousCost.MISCELLANEOUS_CHOICES
+        return Response( types)
+
 
 # -------------------------------
 # Utility Endpoints

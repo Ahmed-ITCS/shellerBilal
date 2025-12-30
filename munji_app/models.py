@@ -194,8 +194,13 @@ class RiceProduction(models.Model):
 # Miscellaneous Costs
 # -----------------------------------------
 class MiscellaneousCost(models.Model):
+    MISCELLANEOUS_CHOICES = [
+        ('miscellaneous', 'miscellaneous'),
+        ('perpit', 'perpit'),
+    ]
     title = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
+    type = models.CharField(max_length=15, choices=MISCELLANEOUS_CHOICES,null=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
